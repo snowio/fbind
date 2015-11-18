@@ -1,0 +1,5 @@
+# These files are text and should be normalized (convert crlf to lf)
+*.php           text
+*.json          text
+*.md            text
+composer.lock   text

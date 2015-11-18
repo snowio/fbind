@@ -1,0 +1,22 @@
+{
+    "name": "joshdifabio/fbind",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Josh Di Fabio",
+            "email": "joshdifabio@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.5",
+    },
+    "require-dev": {
+        "phpunit/phpunit": "~4.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Fbind\\": "src"
+        },
+        "files": [ "src/functions.php" ]
+    }
+}
