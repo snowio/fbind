@@ -48,4 +48,18 @@ class ArrayTypeTest extends PHPUnit_Framework_TestCase
 
         $compiled(['foobar']);
     }
+
+    public function testSubjectIsAllowedParamName()
+    {
+        $compiler = \Fbind\bindParam('subject')->to(function () {
+            return ['hello', 'world'];
+        });
+
+        $compiled = $compiler->compile(function (array $subject, array $bar) {
+            $this->assertSame(['hello', 'world'], $subject);
+            $this->assertSame(['foobar'], $bar);
+        });
+
+        $compiled(['foobar']);
+    }
 }

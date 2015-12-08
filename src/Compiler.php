@@ -36,8 +36,10 @@ class Compiler
      */
     public function compile(callable $subject)
     {
+        $transport = (object)['subject' => $subject, 'binding' => $this->binding];
         $code = sprintf('unset($code); $compiledFn = %s;', $this->compileToCode($subject));
         eval($code);
+        $compiledFn = $compiledFn->bindTo($transport);
 
         return $compiledFn;
     }
@@ -56,9 +58,9 @@ class Compiler
         $params = $this->addBindingParams($paramsToProxy);
 
         $code = "
-        function ({$this->getParamsCode($params)}) use (\$subject) {
+        function ({$this->getParamsCode($params)}) {
             {$this->getBindingCode($paramsToBind)}
-            return call_user_func_array(\$subject, [{$this->getArgumentsCode($subjectParams)}]);
+            return call_user_func_array(\$this->subject, [{$this->getArgumentsCode($subjectParams)}]);
         }";
 
         return $code;
