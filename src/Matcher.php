@@ -37,4 +37,24 @@ class Matcher
     {
         return new NonEmptyMatcher([$condition]);
     }
+
+    /**
+     * @return NonEmptyMatcher
+     */
+    public function whichAreOptional()
+    {
+        return $this->satisfying(function (\ReflectionParameter $subjectParam) {
+            return $subjectParam->isOptional();
+        });
+    }
+
+    /**
+     * @return NonEmptyMatcher
+     */
+    public function whichAreRequired()
+    {
+        return $this->satisfying(function (\ReflectionParameter $subjectParam) {
+            return !$subjectParam->isOptional();
+        });
+    }
 }
