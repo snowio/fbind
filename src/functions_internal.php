@@ -15,7 +15,10 @@ function params_for(callable $callback)
         $callbackReflection = new \ReflectionFunction($callback);
     }
 
-    return $callbackReflection->getParameters();
+    $params = $callbackReflection->getParameters();
+    $paramNames = array_map(function ($param) { return $param->getName(); }, $params);
+
+    return array_combine($paramNames, $params);
 }
 
 /**

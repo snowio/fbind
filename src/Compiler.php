@@ -16,11 +16,11 @@ class Compiler
 
         $bindingParams = Internal\params_for($binding);
 
-        foreach ($bindingParams as $param) {
+        foreach ($bindingParams as $paramName => $param) {
             if ($param->isOptional()) {
-                $this->optionalBindingParams[$param->getName()] = $param;
+                $this->optionalBindingParams[$paramName] = $param;
             } else {
-                $this->requiredBindingParams[$param->getName()] = $param;
+                $this->requiredBindingParams[$paramName] = $param;
             }
         }
 
@@ -52,9 +52,7 @@ class Compiler
     {
         $subjectParams = Internal\params_for($subject);
         $paramsToBind = array_filter($subjectParams, $this->paramBindCondition);
-        $paramsToProxy = array_udiff($subjectParams, $paramsToBind, function ($param1, $param2) {
-            return strcmp($param1->getName(), $param2->getName());
-        });
+        $paramsToProxy = array_diff_key($subjectParams, $paramsToBind);
         $params = $this->addBindingParams($paramsToProxy);
 
         $code = "
