@@ -48,7 +48,7 @@ class Compiler
      * @param callable $subject
      * @return string
      */
-    public function compileToCode(callable $subject)
+    private function compileToCode(callable $subject)
     {
         $subjectParams = Internal\params_for($subject);
         $paramsToBind = array_filter($subjectParams, $this->paramBindCondition);
