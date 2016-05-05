@@ -1,12 +1,12 @@
 <?php
 namespace Fbind;
 
-class Compiler
+abstract class Compiler
 {
     private $binding;
     private $requiredBindingParams = [];
     private $optionalBindingParams = [];
-    private $bindingInvokationCode;
+    protected $bindingInvokationCode;
     private $paramBindCondition;
 
     public function __construct(callable $binding, callable $condition)
@@ -36,8 +36,15 @@ class Compiler
      */
     public function compile(callable $subject)
     {
+        $subjectParams = Internal\params_for($subject);
+        $paramsToBind = array_filter($subjectParams, $this->paramBindCondition);
+
+        if (0 == count($paramsToBind)) {
+            return $subject;
+        }
+
         $transport = (object)['subject' => $subject, 'binding' => $this->binding];
-        $code = sprintf('unset($code); $compiledFn = %s;', $this->compileToCode($subject));
+        $code = sprintf('unset($code); $compiledFn = %s;', $this->compileToCode($subjectParams, $paramsToBind));
         eval($code);
         $compiledFn = $compiledFn->bindTo($transport);
 
@@ -45,30 +52,15 @@ class Compiler
     }
 
     /**
-     * @param callable $subject
      * @return string
      */
-    private function compileToCode(callable $subject)
-    {
-        $subjectParams = Internal\params_for($subject);
-        $paramsToBind = array_filter($subjectParams, $this->paramBindCondition);
-        $paramsToProxy = array_diff_key($subjectParams, $paramsToBind);
-        $params = $this->addBindingParams($paramsToProxy);
-
-        $code = "
-        function ({$this->getParamsCode($params)}) {
-            {$this->getBindingCode($paramsToBind)}
-            return call_user_func_array(\$this->subject, [{$this->getArgumentsCode($subjectParams)}]);
-        }";
-
-        return $code;
-    }
+    abstract protected function compileToCode(array $subjectParams, array $paramsToBind);
 
     /**
      * @param \ReflectionParameter[] $subjectParams
      * @return string
      */
-    private function addBindingParams(array $subjectParams)
+    protected function addBindingParams(array $subjectParams)
     {
         $requiredParams = $this->requiredBindingParams;
         $optionalParams = $this->optionalBindingParams;
@@ -98,7 +90,7 @@ class Compiler
      * @param \ReflectionParameter[] $params
      * @return string
      */
-    private function getParamsCode(array $params)
+    protected function getParamsCode(array $params)
     {
         $paramStrings = array_map([$this, 'getParamCode'], $params);
 
@@ -129,10 +121,10 @@ class Compiler
      * @param \ReflectionParameter[] $params
      * @return string
      */
-    private function getBindingCode(array $paramsToBind)
+    protected function getBindingCode(array $paramsToBind)
     {
         $lines = array_map(function (\ReflectionParameter $param) {
-            return sprintf('$%s = %s;', $param->getName(), $this->bindingInvokationCode);
+            return sprintf('$%s = $this->bindingOutput;', $param->getName(), $this->bindingInvokationCode);
         }, $paramsToBind);
 
         return implode("\n", $lines);
@@ -142,7 +134,7 @@ class Compiler
      * @param \ReflectionParameter[] $params
      * @return string
      */
-    private function getArgumentsCode(array $params)
+    protected function getArgumentsCode(array $params)
     {
         $paramStrings = array_map([$this, 'getArgumentCode'], $params);
 

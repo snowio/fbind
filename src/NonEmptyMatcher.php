@@ -23,7 +23,7 @@ class NonEmptyMatcher extends Matcher
 
     /**
      * @param callable $binding
-     * @return Compiler
+     * @return SynchronousCompiler
      */
     public function to(callable $binding)
     {
@@ -37,6 +37,25 @@ class NonEmptyMatcher extends Matcher
             return true;
         };
 
-        return new Compiler($binding, $condition);
+        return new SynchronousCompiler($binding, $condition);
+    }
+
+    /**
+     * @param callable $binding A callable which returns a thenable
+     * @return AsynchronousCompiler
+     */
+    public function toAsync(callable $binding)
+    {
+        $condition = function (\ReflectionParameter $parameter) {
+            foreach ($this->conditions as $condition) {
+                if (!$condition($parameter)) {
+                    return false;
+                }
+            }
+
+            return true;
+        };
+
+        return new AsynchronousCompiler($binding, $condition);
     }
 }
